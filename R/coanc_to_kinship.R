@@ -7,37 +7,59 @@
 #' \deqn{\phi_{jj} = \frac{1 + \theta_{jj}}{2}.}
 #' Below \eqn{n} is the number of individuals.
 #'
-#' This function starts by copying the input matrix, so it preserves column and row names.
+#' @param coancestry The \eqn{n \times n}{n-by-n} coancestry matrix
 #'
-#' Note that this function is the inverse of popkin::inbrDiag
-#' 
-#' @param Theta The \eqn{n \times n}{n-by-n} coancestry matrix
-#'
-#' @return The \eqn{n \times n}{n-by-n} kinship matrix
+#' @return The \eqn{n \times n}{n-by-n} kinship matrix, preserving column and row names.
 #'
 #' @examples
 #' # a trivial case: unadmixed individuals from independent subpopulations
-#' n <- 5 # number of individuals/subpops
-#' Q <- diag(rep.int(1, n)) # unadmixed individuals
-#' F <- 0.2 # equal Fst for all subpops
-#' Theta <- coanc(Q, F) # diagonal coancestry matryx
-#' Phi <- coanc_to_kinship(Theta)
+#' # number of individuals/subpops
+#' n_ind <- 5
+#' # unadmixed individuals
+#' admix_proportions <- diag(rep.int(1, n_ind))
+#' # equal Fst for all subpops
+#' inbr_subpops <- 0.2
+#' # diagonal coancestry matryx
+#' coancestry <- coanc_admix(admix_proportions, inbr_subpops)
+#' kinship <- coanc_to_kinship(coancestry)
 #'
 #' # a more complicated admixture model
-#' n <- 5 # number of individuals
-#' k <- 2 # number of intermediate subpops
-#' sigma <- 1 # dispersion parameter of intermediate subpops
-#' Q <- q1d(n, k, sigma) # non-trivial admixture proportions
-#' F <- c(0.1, 0.3) # different Fst for each of the k subpops
-#' Theta <- coanc(Q, F) # non-trivial coancestry matrix
-#' Phi <- coanc_to_kinship(Theta)
+#' # number of individuals
+#' n_ind <- 5
+#' # number of intermediate subpops
+#' k_subpops <- 2
+#' # non-trivial admixture proportions
+#' admix_proportions <- admix_prop_1d_linear(n_ind, k_subpops, sigma = 1)
+#' # different Fst for each of the k subpops
+#' inbr_subpops <- c(0.1, 0.3)
+#' # non-trivial coancestry matrix
+#' coancestry <- coanc_admix(admix_proportions, inbr_subpops)
+#' kinship <- coanc_to_kinship( coancestry )
 #'
+#' @seealso
+#' The inverse function is given by \code{\link[popkin]{inbr_diag}}.
+#' 
 #' @export
-coanc_to_kinship <- function(Theta) {
+coanc_to_kinship <- function(coancestry) {
+    # die if this is missing
+    if (missing(coancestry))
+        stop('`coancestry` is required!')
+    # ensure that things that should be matrices are so
+    if (!is.matrix(coancestry))
+        stop('`coancestry` must be a matrix!')
+    # make sure it is numeric
+    if (!is.numeric(coancestry))
+        stop('`coancestry` must be numeric!')
+    # check dimensions
+    m <- nrow(coancestry)
+    n <- ncol(coancestry)
+    if (n != m)
+        stop('`coancestry` must be a square matrix!  (nrow ', m, ' != ncol ', n, ')')
+    
     # first copy matrix
-    Phi <- Theta
+    kinship <- coancestry
     # transform diagonal (only difference)
-    diag(Phi) <- (diag(Phi)+1)/2
+    diag(kinship) <- ( diag(kinship) + 1 ) / 2
     # return
-    return( Phi )
+    return( kinship )
 }

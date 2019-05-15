@@ -4,13 +4,13 @@
 \alias{coanc_to_kinship}
 \title{Transform coancestry matrix to kinship matrix}
 \usage{
-coanc_to_kinship(Theta)
+coanc_to_kinship(coancestry)
 }
 \arguments{
-\item{Theta}{The \eqn{n \times n}{n-by-n} coancestry matrix}
+\item{coancestry}{The \eqn{n \times n}{n-by-n} coancestry matrix}
 }
 \value{
-The \eqn{n \times n}{n-by-n} kinship matrix
+The \eqn{n \times n}{n-by-n} kinship matrix, preserving column and row names.
 }
 \description{
 Let
@@ -20,26 +20,32 @@ These matrices agree off-diagonal, but the diagonal gets transformed as
 \deqn{\phi_{jj} = \frac{1 + \theta_{jj}}{2}.}
 Below \eqn{n} is the number of individuals.
 }
-\details{
-This function starts by copying the input matrix, so it preserves column and row names.
-
-Note that this function is the inverse of popkin::inbrDiag
-}
 \examples{
 # a trivial case: unadmixed individuals from independent subpopulations
-n <- 5 # number of individuals/subpops
-Q <- diag(rep.int(1, n)) # unadmixed individuals
-F <- 0.2 # equal Fst for all subpops
-Theta <- coanc(Q, F) # diagonal coancestry matryx
-Phi <- coanc_to_kinship(Theta)
+# number of individuals/subpops
+n_ind <- 5
+# unadmixed individuals
+admix_proportions <- diag(rep.int(1, n_ind))
+# equal Fst for all subpops
+inbr_subpops <- 0.2
+# diagonal coancestry matryx
+coancestry <- coanc_admix(admix_proportions, inbr_subpops)
+kinship <- coanc_to_kinship(coancestry)
 
 # a more complicated admixture model
-n <- 5 # number of individuals
-k <- 2 # number of intermediate subpops
-sigma <- 1 # dispersion parameter of intermediate subpops
-Q <- q1d(n, k, sigma) # non-trivial admixture proportions
-F <- c(0.1, 0.3) # different Fst for each of the k subpops
-Theta <- coanc(Q, F) # non-trivial coancestry matrix
-Phi <- coanc_to_kinship(Theta)
+# number of individuals
+n_ind <- 5
+# number of intermediate subpops
+k_subpops <- 2
+# non-trivial admixture proportions
+admix_proportions <- admix_prop_1d_linear(n_ind, k_subpops, sigma = 1)
+# different Fst for each of the k subpops
+inbr_subpops <- c(0.1, 0.3)
+# non-trivial coancestry matrix
+coancestry <- coanc_admix(admix_proportions, inbr_subpops)
+kinship <- coanc_to_kinship( coancestry )
 
+}
+\seealso{
+The inverse function is given by \code{\link[popkin]{inbr_diag}}.
 }

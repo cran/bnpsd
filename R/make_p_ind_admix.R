@@ -3,7 +3,7 @@
 #' Here \eqn{m} is the number of loci, \eqn{n} the number of individuals, and \eqn{k} the number of intermediate subpopulations.
 #' The \eqn{m \times n}{m-by-n} individual-specific allele frequency matrix \eqn{P} is constructed from the \eqn{m \times k}{m-by-k} intermediate subpopulation allele frequency matrix \eqn{B} and the \eqn{n \times k}{n-by-k} admixture proportion matrix \eqn{Q} using
 #' \deqn{P = B Q^T.}{P = B * Q^T.}
-#' This function is a wrapper around \code{\link{tcrossprod}}, but also ensures the output allele frequencies are in [0, 1], as this is not guaranteed by \code{\link{tcrossprod}} due to limited machine precision.
+#' This function is a wrapper around \code{\link{tcrossprod}}, but also ensures the output allele frequencies are in \[0, 1\], as this is not guaranteed by \code{\link{tcrossprod}} due to limited machine precision.
 #' 
 #' @param p_subpops The \eqn{m \times k}{m-by-k} matrix of intermediate subpopulation allele frequencies.
 #' @param admix_proportions The \eqn{n \times k}{n-by-k} matrix of admixture proportions.
@@ -61,30 +61,4 @@ make_p_ind_admix <- function(p_subpops, admix_proportions) {
     p_ind[p_ind > 1] <- 1
     
     return(p_ind)
-}
-
-# stick deprecated function name here
-
-#' @title Construct individual-specific allele frequency matrix under the PSD admixture model
-#' @description Construct individual-specific allele frequency matrix under the PSD admixture model
-#' @param B The matrix of intermediate subpopulation allele frequencies.
-#' @param Q The matrix of admixture proportions.
-#' @return The matrix of individual-specific allele frequencies.
-#'
-#' @name rpiaf-deprecated
-#' @usage rpiaf(B, Q)
-#' @seealso \code{\link{bnpsd-deprecated}}
-#' @keywords internal
-NULL
-
-#' @rdname bnpsd-deprecated
-#' @section \code{rpiaf}:
-#' For \code{rpiaf}, use \code{\link{make_p_ind_admix}}.
-#'
-#' @export
-rpiaf <- function(B, Q) {
-    # mark as deprecated
-    .Deprecated('make_p_ind_admix')
-    # return as usual, to not break things just yet
-    make_p_ind_admix(B, Q)
 }

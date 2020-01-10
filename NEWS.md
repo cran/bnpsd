@@ -80,3 +80,42 @@ These loci are not polymorphic so they would normally not be considered in analy
 * Added ORCIDs to authors.
 * Corrected doc typos.
 * Adjusted layout of subpopulations and individuals (default limits) for circular 1D geography (`admix_prop_1d_circular`) to prevent overlapping individuals on the edges, and to better agree visually with the linear version (`admix_prop_1d_linear`).
+
+# 2019-06-05 - bnpsd 1.1.2
+
+* Non-code changes:
+  * Edited .Rbuildignore to stop ignoring README; also removed non-existent files from list
+  * Removed unused .travis.yml and bnpsd.Rproj files
+
+# 2019-08-13 - bnpsd 1.1.2.9000
+
+* Improved memory efficiency of default `draw_genotypes_admix`
+  * Old approach was by default very memory-hungry (created IAF matrix whole when admixture proportions were provided).
+    The `low_mem` option could be set but filled slowly by locus only.
+  * New approach is always low-memory (so the explicit option was removed).
+    This was made faster by filling by individual when there are fewer individuals than loci, or filling by locus otherwise, therefore always vectorizing as much as possible.
+	Test showed this was always as fast as the original full memory approach, so the latter was removed as an option.
+* `draw_all_admix` is also now automatically low-memory whenever `want_p_ind = FALSE`, and the explicit `low_mem` option has also been removed.
+* Updated documentation to use RMarkdown
+* Other code tidying
+
+# 2019-09-06 - bnpsd 1.1.3.9000
+
+* Added option `beta` in function `draw_p_anc` to trigger a symmetric Beta distribution for the ancestral allele frequencies, with the desired shape parameter.
+  The `beta` option can also be set on the wrapper function `draw_all_admix`.
+  This option allows simulation of a distribution heavier on rare variants (when `beta` is much smaller than 1), more similar to real human data.
+
+# 2019-12-17 - bnpsd 1.2.0
+
+* Fourth CRAN submission.
+* Removed deprecated function names: `q1dc`, `q1d`, `qis`, `coanc`, `rbnpsd`, `rgeno`, `rpanc`, `rpint`, `rpiaf`.
+* Moved logo to `man/figures/`
+* Minor Roxygen-related updates.
+
+# 2020-01-08 - bnpsd 1.2.1
+
+* Fourth CRAN submission, second attempt.
+* Fixed a rare bug in `bias_coeff_admix_fit`, which caused it to die if the desired bias coefficient was an extreme value (particularly `1`).
+  The error message was: `f() values at end points not of opposite sign`.
+  The actual bug was not observed in the regular R build, but rather in a limited precision setting where R was configured with `--disable-long-double`.
+  

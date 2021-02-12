@@ -118,4 +118,23 @@ These loci are not polymorphic so they would normally not be considered in analy
 * Fixed a rare bug in `bias_coeff_admix_fit`, which caused it to die if the desired bias coefficient was an extreme value (particularly `1`).
   The error message was: `f() values at end points not of opposite sign`.
   The actual bug was not observed in the regular R build, but rather in a limited precision setting where R was configured with `--disable-long-double`.
-  
+
+# 2020-01-08 - bnpsd 1.2.1.9000
+
+* Added option `p_anc` to function `draw_all_admix`, to specify desired ancestral allele frequencies instead of having the code generate it randomly (default).
+* Added details for documentation of function `draw_p_subpops.R`, clarifying that input `p_anc` can be scalar.
+
+# 2021-01-21 - bnpsd 1.2.2.9000
+
+* Function `draw_all_admix`: when option `p_anc` is provided as scalar and `want_p_anc = TRUE`, now the return value is always a vector (in this case the input scalar value repeated `m_loci` times).  The previous behavior was to return `p_anc` as scalar if that was the input, which could be problematic for downstream applications.
+
+# 2021-02-11 - bnpsd 1.2.3
+
+* 5th CRAN submission
+* Functions `admix_prop_1d_linear` and `admix_prop_1d_circular` had these changes:
+  - The optional parameters `bias_coeff`, `coanc_subpops` and `fst` now have default values (of `NA`, `NULL`, and `NA`, respectively) instead of missing, and these "missing" values can be passed to get the same behavior as if they hadn't been passed at all.
+  - Their documentation has been clarified.
+  - Improved internal code to handle edge case `bias_coeff = 1` (to fix an issue only observed on Apple M1).
+* Function `admix_prop_indep_subpops`: default value for the optional parameter `subpops` is now made more clear in arguments definition.
+* Simplified documentation (most functions) by clarifying language, using markdown roxygen, and replacing all LaTeX equations with simpler code equations.
+* Updated paper citations in `DESCRIPTION`, `README.md` and the vignette, to point to the published method in PLoS Genetics.

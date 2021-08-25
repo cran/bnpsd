@@ -6,13 +6,15 @@
 #' The actual function is more efficient than the above code.
 #'
 #' @param p_anc The scalar or length-`m_loci` vector of ancestral allele frequencies per locus.
-#' @param inbr_subpops The length-`k_subpops` vector of subpopulation FST values.
+#' @param inbr_subpops The scalar or length-`k_subpops` vector of subpopulation FST values.
 #' @param m_loci If `p_anc` is scalar, optionally provide the desired number of loci (lest only one locus be simulated).
 #' Stops if both `length(p_anc) > 1` and `m_loci` is not `NA` and they disagree.
 #' @param k_subpops If `inbr_subpops` is a scalar, optionally provide the desired number of subpopulations (lest a single subpopulation be simulated).
 #' Stops if both `length(inbr_subpops) > 1` and `k_subpops` is not `NA` and they disagree.
 #'
-#' @return The `m_loci`-by-`k_subpops` matrix of independent subpopulation allele frequencies
+#' @return The `m_loci`-by-`k_subpops` matrix of independent subpopulation allele frequencies.
+#' If `p_anc` is length-`m_loci` with names, these are copied to the row names of this output matrix.
+#' If `inbr_subpops` is length-`k_subpops` with names, these are copied to the column names of this output matrix.
 #'
 #' @examples
 #' # a typical, non-trivial example
@@ -44,6 +46,9 @@
 #' stopifnot ( nrow( p_subpops ) == 1 )
 #' stopifnot ( ncol( p_subpops ) == 1 )
 #'
+#' @seealso
+#' [draw_p_subpops_tree()] for version for subpopulations related by a tree, which can therefore be non-independent.
+#' 
 #' @export
 draw_p_subpops <- function(p_anc, inbr_subpops, m_loci = NA, k_subpops = NA) {
     # basic param checking
@@ -51,6 +56,17 @@ draw_p_subpops <- function(p_anc, inbr_subpops, m_loci = NA, k_subpops = NA) {
         stop('ancestral allele frequencies `p_anc` are required!')
     if (missing(inbr_subpops))
         stop('`inbr_subpops` (FST) scalar or vector are required!')
+    
+    # look at data ranges
+    # all of these are probabilities so problems happen when they're out of range
+    if ( any( p_anc < 0 ) )
+        stop( '`p_anc` cannot be negative!' )
+    if ( any( p_anc > 1 ) )
+        stop( '`p_anc` cannot exceed 1!' )
+    if ( any( inbr_subpops < 0 ) )
+        stop( '`inbr_subpops` cannot be negative!' )
+    if ( any( inbr_subpops > 1 ) )
+        stop( '`inbr_subpops` cannot exceed 1!' )
     
     # number of loci to simulate
     # allow p_anc to be a scalar, m_loci can be passed separately
@@ -81,12 +97,22 @@ draw_p_subpops <- function(p_anc, inbr_subpops, m_loci = NA, k_subpops = NA) {
     # if this is missing, always set to actual value (even if it is 1)
     if ( is.na( k_subpops ) )
         k_subpops <- k_subpops_inbr
-    
+
     # let's translate parameters for Balding-Nichols case
     nu <- 1 / inbr_subpops - 1 # nu is a vector or a scalar, same as inbr_subpops (whatever that is)
     p_anc_alt <- 1 - p_anc # precompute vector of "alternative" p_anc's, shared by all subpopulations below
+    
     # vectorization makes a lot of sense for each subpopulation... (doing all SNPs together)
     p_subpops <- matrix(nrow = m_loci, ncol = k_subpops) # matrix of intermediate allele frequencies we want...
+
+    # add names now if it makes sense
+    # p_anc can be scalar, so this only makes sense if the length matches (and names are defined)
+    if ( !is.null( names( p_anc ) ) && length( p_anc ) == m_loci )
+        rownames( p_subpops ) <- names( p_anc )
+    # similarly for inbr_subpops
+    if ( !is.null( names( inbr_subpops ) ) && length( inbr_subpops ) == k_subpops )
+        colnames( p_subpops ) <- names( inbr_subpops )
+    
     for ( j in 1 : k_subpops ) {
         # handle scalar inbr_subpops here
         nuj <- if (k_subpops_inbr == 1) nu else nu[j] 
@@ -99,5 +125,5 @@ draw_p_subpops <- function(p_anc, inbr_subpops, m_loci = NA, k_subpops = NA) {
         }
     }
     
-    p_subpops # the only thing we want out of this
+    return( p_subpops ) # the only thing we want out of this
 }

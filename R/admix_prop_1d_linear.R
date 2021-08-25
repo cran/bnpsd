@@ -24,8 +24,13 @@
 #' This `coanc_subpops` can be in the wrong scale (it cancels out in calculations), which is returned corrected, to result in the desired `fst` (next).
 #' @param fst If `sigma` is `NA`, this FST of the admixed individuals is required.
 #'
-#' @return If `sigma` was provided, the `n_ind`-by-`k_subpops` admixture proportion matrix (`admix_proportions`).
-#' If `sigma` is missing, a named list is returned containing `admix_proportions`, the rescaled `coanc_subpops`, and the `sigma` (which together give the desired `bias_coeff` and `fst`).
+#' @return If `sigma` was provided, returns the `n_ind`-by-`k_subpops` admixture proportion matrix (`admix_proportions`).
+#' If `sigma` is missing, returns a named list containing:
+#' - `admix_proportions`: the `n_ind`-by-`k_subpops` admixture proportion matrix.
+#'   If `coanc_subpops` had names, they are copied to the columns of this matrix.
+#' - `coanc_subpops`: the input `coanc_subpops` rescaled.
+#' - `sigma`: the fit value of the spread of intermediate subpopulations
+#' - `coanc_factor`: multiplicative factor used to rescale `coanc_subpops`
 #'
 #' @examples
 #' # admixture matrix for 1000 individuals drawing alleles from 10 subpops
@@ -112,34 +117,66 @@ admix_prop_1d_linear <- function(
     mus <- 1 : k_subpops
     
     # construct the coefficients of each person now!
-    admix_proportions <- matrix( nrow = n_ind, ncol = k_subpops )
+    admix_proportions <- matrix( 0, nrow = n_ind, ncol = k_subpops )
     for ( i in 1 : n_ind ) {
-        if (sigma == 0) {
-            # let's handle this special case, the limit of which is the island model
-            # compute distances to the subpopulations
-            distances <- (xs[i] - mus)^2
-            # find the minimum distance
-            min_distance <- min( distances )
-            # ok to set to booleans (normalization will turn numeric)
-            # the minima will be TRUE (1), the rest FALSE (0)
-            # this ensures ties get admix_proportions split evenly (after normalizing at the end)
-            admix_proportions[i,] <- distances == min_distance
-        } else {
+        # this is the "normal" way (pun intended)
+        if ( sigma > 0 ) {
             # collect the density values for each intermediate subpopulation at individual i's position
             # line implements super fast Normal without constant factors (which only involve constant sigma)
             # NOTE: sigma2 has negative sign built into it!
             # NOTE: sigma = Inf is correctly handled here (gives all admix_proportions == 1 before normalizing)
             admix_proportions[i,] <- exp( (xs[i] - mus)^2 / sigma2 )
         }
+        
+        # if sigma was zero, the entire row is still at zero
+        # if the normal way failed, the row will also be all zeroes
+        # so test for that and apply a discrete clustering either way
+        if ( sigma == 0 || sum( admix_proportions[ i, ] ) == 0 ) {
+            # let's handle this special case, the limit of which is the island model
+            # compute distances to the subpopulations
+            distances <- (xs[i] - mus)^2
+            # find the minimum distance
+            min_distance <- min( distances )
+            # ok to set to booleans (turns numeric upon saving to matrix, or if sigma==0, upon normalization)
+            # the minima will be TRUE (1), the rest FALSE (0)
+            # this ensures ties get admix_proportions split evenly (after normalizing at the end)
+            admix_proportions[i,] <- distances == min_distance
+        }
     } 
     # normalize to have rows/coefficients sum to 1!
-    admix_proportions <- admix_proportions / rowSums( admix_proportions )
+    admix_proportions_row_sums <- rowSums( admix_proportions )
+    # in some extreme examples a whole row is zero, resulting in NAs
+    # we should have handled that already, but check anyway
+    if ( any( admix_proportions_row_sums == 0 ) )
+        stop( 'Resulting `admix_proportions` had rows with zero sums, cannot normalize!  sigma = ', sigma )
+    admix_proportions <- admix_proportions / admix_proportions_row_sums
+    
+    # check for issues so far
+    if ( anyNA( admix_proportions ) )
+        stop( '`admix_proportions` had NAs!  sigma = ', sigma )
 
     if (fit_bias_coeff) {
         # this triggers version that fits bias coefficient
-        coanc_subpops <- rescale_coanc_subpops(admix_proportions, coanc_subpops, fst) # let's rescale coanc_subpops now!
-        return( list(admix_proportions = admix_proportions, coanc_subpops = coanc_subpops, sigma = sigma) ) # return all this additional data!
+        # let's rescale coanc_subpops now!
+        obj <- rescale_coanc_subpops(admix_proportions, coanc_subpops, fst) 
+        
+        # get names from `coanc_subpops`, inherit into `admix_proportions` if non-NULL
+        names_coanc_subpops <- names_coanc( coanc_subpops )
+        if ( !is.null( names_coanc_subpops ) )
+            colnames( admix_proportions ) <- names_coanc_subpops
+        
+        # return all this additional data!
+        return(
+            list(
+                admix_proportions = admix_proportions,
+                coanc_subpops = obj$coanc_subpops,
+                sigma = sigma,
+                coanc_factor = obj$factor
+            )
+        )
     } else {
-        return(admix_proportions) # in direct case, always return admix_proportions
+        # in direct case, always return admix_proportions
+        # colnames are always NULL in this case
+        return(admix_proportions)
     }
 }

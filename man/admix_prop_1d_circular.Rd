@@ -38,8 +38,15 @@ This \code{coanc_subpops} can be in the wrong scale (it cancels out in calculati
 \item{fst}{If \code{sigma} is \code{NA}, this FST of the admixed individuals is required.}
 }
 \value{
-If \code{sigma} was provided, the \code{n_ind}-by-\code{k_subpops} admixture proportion matrix (\code{admix_proportions}).
-If \code{sigma} is missing, a named list is returned containing \code{admix_proportions}, the rescaled \code{coanc_subpops}, and the \code{sigma} (which together give the desired \code{bias_coeff} and \code{fst}).
+If \code{sigma} was provided, returns the \code{n_ind}-by-\code{k_subpops} admixture proportion matrix (\code{admix_proportions}).
+If \code{sigma} is missing, returns a named list containing:
+\itemize{
+\item \code{admix_proportions}: the \code{n_ind}-by-\code{k_subpops} admixture proportion matrix.
+If \code{coanc_subpops} had names, they are copied to the columns of this matrix.
+\item \code{coanc_subpops}: the input \code{coanc_subpops} rescaled.
+\item \code{sigma}: the fit value of the spread of intermediate subpopulations
+\item \code{coanc_factor}: multiplicative factor used to rescale \code{coanc_subpops}
+}
 }
 \description{
 Assumes \code{k_subpops} intermediate subpopulations placed along a circumference (the [\code{0}, \code{2 * pi}] line that wraps around) with even spacing spread by random walks (see details below), then \code{n_ind} individuals sampled equally spaced in [\code{coord_ind_first},\code{coord_ind_last}] (default [\code{0}, \code{2 * pi}] with a small gap so first and last individual do not overlap) draw their admixture proportions relative to the Von Mises density that models the random walks of each of these intermediate subpopulations.
@@ -49,7 +56,7 @@ If \code{sigma} is missing, it can be set indirectly by providing three variable
 \details{
 Assuming the full range of [\code{0}, \code{2 * pi}] is considered, and the first and last individuals do not overlap, the gap between individuals is \code{delta = 2 * pi / n}.
 To not have any individuals on the edge, we place the first individual at \code{delta / 2} and the last at \code{2 * pi - delta / 2}.
-The location of subpopulation \code{j} is \code{delta / 2 + ( j - 1/2 ) / k * (2 * pi - delta)}, chosen to agree with the default correspondence between individuals and subpopulations of the linear 1D geography admixture scenario (\verb{\link{admix_prop_1d_linear}}).
+The location of subpopulation \code{j} is \code{delta / 2 + ( j - 1/2 ) / k * (2 * pi - delta)}, chosen to agree with the default correspondence between individuals and subpopulations of the linear 1D geography admixture scenario (\code{\link[=admix_prop_1d_linear]{admix_prop_1d_linear()}}).
 
 If \code{sigma} is \code{NA}, its value is determined from the desired \code{bias_coeff}, \code{coanc_subpops} up to a scalar factor, and \code{fst}.
 Uniform weights for the final generalized FST are assumed.

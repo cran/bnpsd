@@ -6,24 +6,32 @@
 \usage{
 draw_all_admix(
   admix_proportions,
-  inbr_subpops,
+  inbr_subpops = NULL,
   m_loci,
+  tree_subpops = NULL,
   want_genotypes = TRUE,
   want_p_ind = FALSE,
   want_p_subpops = FALSE,
   want_p_anc = TRUE,
   verbose = FALSE,
   require_polymorphic_loci = TRUE,
+  maf_min = 0,
   beta = NA,
-  p_anc = NULL
+  p_anc = NULL,
+  p_anc_distr = NULL
 )
 }
 \arguments{
 \item{admix_proportions}{The \code{n}-by-\code{k} matrix of admixture proportions.}
 
-\item{inbr_subpops}{The length-\code{k} vector (or scalar) of intermediate subpopulation FST values.}
+\item{inbr_subpops}{The length-\code{k} vector (or scalar) of intermediate subpopulation FST values.
+Either this or \code{tree_subpops} must be provided (but not both).}
 
 \item{m_loci}{The number of loci to draw.}
+
+\item{tree_subpops}{The coancestry tree relating the \code{k} intermediate subpopulations.
+Must be a \code{phylo} object from the \code{ape} package (see \code{\link[ape:read.tree]{ape::read.tree()}}).
+Either this or \code{inbr_subpops} must be provided (but not both).}
 
 \item{want_genotypes}{If \code{TRUE} (default), includes the matrix of random genotypes in the return list.}
 
@@ -36,14 +44,25 @@ Note that by default \code{p_ind} is not constructed in full at all, instead a f
 
 \item{verbose}{If \code{TRUE}, prints messages for every stage in the algorithm.}
 
-\item{require_polymorphic_loci}{If TRUE (default), returned genotype matrix will not include any fixed loci (loci that happened to be fixed are drawn again, starting from their ancestral allele frequencies, and checked iteratively until no fixed loci remain, so that the final number of polymorphic loci is exactly \code{m_loci}).}
+\item{require_polymorphic_loci}{If \code{TRUE} (default), returned genotype matrix will not include any fixed loci (loci that happened to be fixed are drawn again, starting from their ancestral allele frequencies, and checked iteratively until no fixed loci remain, so that the final number of polymorphic loci is exactly \code{m_loci}).}
+
+\item{maf_min}{The minimum minor allele frequency (default zero), to extend the working definition of "fixed" above to include rare variants.
+This helps simulate a frequency-based locus ascertainment bias.
+Loci with minor allele frequencies less than or \emph{equal} to this value are treated as fixed (passed to \code{\link[=fixed_loci]{fixed_loci()}}).
+This parameter has no effect if \code{require_polymorphic_loci} is \code{FALSE}.}
 
 \item{beta}{Shape parameter for a symmetric Beta for ancestral allele frequencies \code{p_anc}.
 If \code{NA} (default), \code{p_anc} is uniform with range in [0.01, 0.5].
-Otherwise, \code{p_anc} has a symmetric Beta distribution with range in [0, 1].}
+Otherwise, \code{p_anc} has a symmetric Beta distribution with range in [0, 1].
+Has no effect if either \code{p_anc} or \code{p_anc_distr} options are non-\code{NULL}.}
 
 \item{p_anc}{If provided, it is used as the ancestral allele frequencies (instead of drawing random ones).  Must either be a scalar or a length-\code{m_loci} vector.
-If scalar and \code{want_p_anc = TRUE}, then the returned \code{p_anc} is the scalar value repeated \code{m_loci} times (it is always a vector).}
+If scalar and \code{want_p_anc = TRUE}, then the returned \code{p_anc} is the scalar value repeated \code{m_loci} times (it is always a vector).
+If a locus was fixed and has to be redrawn, the ancestral allele frequency in \code{p_anc} is retained and only downstream allele frequencies and genotypes are redrawn (contrast to \code{p_anc_distr} below).}
+
+\item{p_anc_distr}{If provided, ancestral allele frequencies are drawn with replacement from this vector (which may have any length) or function, instead of from \code{\link[=draw_p_anc]{draw_p_anc()}}.
+If a function, must accept a single parameter specifying the number of loci to draw.
+If a locus was fixed and has to be redrawn, the ancestral allele frequency is redrawn from the distribution (contrast to \code{p_anc} above).}
 }
 \value{
 A named list with the following items (which may be missing depending on options):
@@ -59,10 +78,13 @@ Included if \code{want_p_ind = TRUE}.
 }
 }
 \description{
-This function returns simulated ancestral, intermediate, and individual-specific allele frequencies and genotypes given the admixture structure, as determined by the admixture proportions and the vector of intermediate subpopulation FST values.
-The function is a wrapper around \verb{\link{draw_p_anc}}, \verb{\link{draw_p_subpops}}, \verb{\link{make_p_ind_admix}}, and \verb{\link{draw_genotypes_admix}} with additional features such as requiring polymorphic loci.
+This function returns simulated ancestral, intermediate, and individual-specific allele frequencies and genotypes given the admixture structure, as determined by the admixture proportions and the vector or tree of intermediate subpopulation FST values.
+The function is a wrapper around \code{\link[=draw_p_anc]{draw_p_anc()}}, \code{\link[=draw_p_subpops]{draw_p_subpops()}}/\code{\link[=draw_p_subpops_tree]{draw_p_subpops_tree()}}, \code{\link[=make_p_ind_admix]{make_p_ind_admix()}}, and \code{\link[=draw_genotypes_admix]{draw_genotypes_admix()}} with additional features such as requiring polymorphic loci.
 Importantly, by default fixed loci (where all individuals were homozygous for the same allele) are re-drawn from the start (starting from the ancestral allele frequencies) so no fixed loci are in the output and no biases are introduced by re-drawing genotypes conditional on any of the previous allele frequencies (ancestral, intermediate, or individual-specific).
 Below \code{m_loci} (also \code{m}) is the number of loci, \code{n} is the number of individuals, and \code{k} is the number of intermediate subpopulations.
+}
+\details{
+As a precaution, function stops if both the column names of \code{admix_proportions} and the names in \code{inbr_subpops} or \code{tree_subpops} exist and disagree, which might be because these two data are not aligned or there is some other inconsistency.
 }
 \examples{
 # dimensions

@@ -64,7 +64,13 @@ barplot(inbr_subpops, col = col_subpops, names.arg = 1 : k_subpops, ylim = c(0, 
 # visualize the admixture proportions
 # shrink default margins
 par(mar = c(1, 4, 0, 0) + 0.2)
-barplot(t(admix_proportions), col = col_subpops, border = NA, space = 0, ylab = 'Admixture prop.')
+barplot(
+    t(admix_proportions),
+    col = col_subpops,
+    border = NA,
+    space = 0,
+    ylab = 'Admixture prop.'
+)
 mtext('Individuals', 1)
 
 ## ---- fig.width = 4.2, fig.height = 3, fig.align = 'center'-------------------
@@ -72,7 +78,8 @@ mtext('Individuals', 1)
 plot_popkin(
     coancestry,
     # zero inner margin (plus padding) because we have no labels
-    mar = 0
+    mar = 0,
+    leg_title = 'Coancestry'
 )
 
 ## -----------------------------------------------------------------------------
@@ -132,7 +139,28 @@ plot_popkin(
     list( coancestry, coancestry_estimate ),
     titles = c('Truth', 'Estimate'),
     # second value is top margin, for panel titles
-    mar = c(0, 2.5)
+    mar = c(0, 2.5),
+    leg_title = 'Coancestry'
+)
+
+## -----------------------------------------------------------------------------
+coancestry_subpops_estimate <- popkin_af( p_subpops )
+coancestry_ind_estimate <- popkin_af( p_ind )
+
+## ---- fig.width = 6, fig.height = 2.8, fig.align = 'center'-------------------
+plot_popkin(
+    list( diag( inbr_subpops ), coancestry_subpops_estimate ),
+    titles = c('Truth', 'Estimate'),
+    mar = c(0, 2.5),
+    leg_title = 'Coancestry'
+)
+
+## ---- fig.width = 6, fig.height = 2.8, fig.align = 'center'-------------------
+plot_popkin(
+    list( coancestry, coancestry_ind_estimate ),
+    titles = c('Truth', 'Estimate'),
+    mar = c(0, 2.5),
+    leg_title = 'Coancestry'
 )
 
 ## -----------------------------------------------------------------------------
@@ -148,23 +176,23 @@ X <- draw_genotypes_admix(p_ind)
 
 ## ---- fig.width = 4, fig.height = 2, fig.align = 'center'---------------------
 # this increases the proportion of rare alleles
-p_anc <- draw_p_anc(m_loci, beta = 0.1)
+p_anc_beta <- draw_p_anc(m_loci, beta = 0.1)
 # shrink default margins for these figures
 par(mar = c(4, 4, 0, 0) + 0.2)
-hist(p_anc, xlab = 'Ancestral AF', main = '', xlim = c(0, 1))
+hist(p_anc_beta, xlab = 'Ancestral AF', main = '', xlim = c(0, 1))
 
 ## ---- fig.width = 4, fig.height = 2, fig.align = 'center'---------------------
 # this increases the proportion of rare alleles
-p_anc <- rbeta(m_loci, shape1 = 0.1, shape2 = 1)
+p_anc_beta <- rbeta(m_loci, shape1 = 0.1, shape2 = 1)
 # shrink default margins for these figures
 par(mar = c(4, 4, 0, 0) + 0.2)
-hist(p_anc, xlab = 'Ancestral AF', main = '', xlim = c(0, 1))
+hist(p_anc_beta, xlab = 'Ancestral AF', main = '', xlim = c(0, 1))
 
 ## -----------------------------------------------------------------------------
 # draw genotypes for one individual from the ancestral population
 # use "cbind" to turn the vector p_anc into a column matrix
 # ("draw_genotypes_admix" expects a matrix)
-X_anc <- draw_genotypes_admix( cbind(p_anc) )
+X_anc <- draw_genotypes_admix( cbind( p_anc ) )
 # returns a column matrix:
 dim(X_anc)
 
@@ -219,7 +247,13 @@ barplot(inbr_subpops, col = col_subpops, names.arg = colnames(admix_proportions)
 # visualize the admixture proportions
 # tweak margins/etc
 par(mar = c(1, 4, 0.4, 0) + 0.2, lab = c(2, 2, 7))
-barplot(t(admix_proportions), col = col_subpops, border = NA, space = 0, ylab = 'Admix prop')
+barplot(
+    t(admix_proportions),
+    col = col_subpops,
+    border = NA,
+    space = 0,
+    ylab = 'Admix prop'
+)
 mtext('Individuals', 1)
 
 ## ---- fig.width = 4.2, fig.height = 3, fig.align = 'center'-------------------
@@ -227,7 +261,8 @@ mtext('Individuals', 1)
 plot_popkin(
     coancestry,
     leg_n = 3,
-    mar = c(0, 0.4)
+    mar = c(0, 0.4),
+    leg_title = 'Coancestry'
 )
 
 ## -----------------------------------------------------------------------------
@@ -289,7 +324,13 @@ barplot(inbr_subpops, col = col_subpops, names.arg = colnames(admix_proportions)
 # visualize the admixture proportions
 # tweak margins/etc
 par(mar = c(1, 4, 0.4, 0) + 0.2, lab = c(2, 2, 7))
-barplot(t(admix_proportions), col = col_subpops, border = NA, space = 0, ylab = 'Admix prop')
+barplot(
+    t(admix_proportions),
+    col = col_subpops,
+    border = NA,
+    space = 0,
+    ylab = 'Admix prop'
+)
 mtext('Individuals', 1)
 
 ## ---- fig.width = 4.2, fig.height = 3, fig.align = 'center'-------------------
@@ -297,6 +338,119 @@ mtext('Individuals', 1)
 plot_popkin(
     coancestry,
     leg_n = 3,
-    mar = c(0, 0.4)
+    mar = c(0, 0.4),
+    leg_title = 'Coancestry'
+)
+
+## -----------------------------------------------------------------------------
+tree_str <- '(S1:0.1,(S2:0.1,(S3:0.1,(S4:0.1,S5:0.1)N3:0.1)N2:0.1)N1:0.1)T;'
+
+## ---- fig.width = 4, fig.height = 3.5, fig.align = 'center'-------------------
+# base package for phylogenetics
+library(ape)
+# parses tree, creates object of class "phylo"
+tree_subpops <- read.tree( text = tree_str )
+# plot tree
+par( mar = c(3,0,0,0) + 0.2 )
+plot( tree_subpops, show.node.label = TRUE )
+# add axis and label
+axisPhylo( backward = FALSE )
+mtext( 'Coancestry', side = 1, line = 2 )
+
+## -----------------------------------------------------------------------------
+p_subpops_tree <- draw_p_subpops_tree(
+    p_anc = p_anc,
+    tree_subpops = tree_subpops
+)
+
+## ---- fig.width = 6, fig.height = 2.8, fig.align = 'center'-------------------
+# estimate coancestry
+coancestry_subpops_tree_estimate <- popkin_af( p_subpops_tree )
+# expected coancestry according to model
+coancestry_subpops_tree <- coanc_tree( tree_subpops )
+# plot
+plot_popkin(
+    list( coancestry_subpops_tree, coancestry_subpops_tree_estimate ),
+    titles = c('Truth', 'Estimate'),
+    mar = c(2, 2.5),
+    leg_title = 'Coancestry',
+    names = TRUE
+)
+
+## -----------------------------------------------------------------------------
+1 - (1 - 0.1)^4
+
+## -----------------------------------------------------------------------------
+# number of admixed individuals
+n_ind <- 100
+# number of subpopulations, extracted from true coancestry
+k_subpops <- nrow( coancestry_subpops_tree )
+
+# define population structure
+# for simplicity here we set spread parameter `sigma` directly
+# admixture proportions from 1D geography
+admix_proportions <- admix_prop_1d_linear(
+    n_ind = n_ind,
+    k_subpops = k_subpops,
+    sigma = 0.5
+)
+
+# get pop structure parameters of the admixed individuals
+coancestry <- coanc_admix(admix_proportions, coancestry_subpops_tree)
+
+# calculate true FST of simulation
+fst_admix(admix_proportions, coancestry_subpops_tree)
+
+## ---- fig.width = 6, fig.height = 1.5, fig.align = 'center'-------------------
+# visualize the admixture proportions
+# colors for these independent subpopulations
+col_subpops <- brewer.pal(k_subpops, "Paired")
+# shrink default margins
+par(mar = c(1, 4, 0, 0) + 0.2)
+barplot(
+    t(admix_proportions),
+    col = col_subpops,
+    border = NA,
+    space = 0,
+    ylab = 'Admixture prop.'
+)
+mtext('Individuals', 1)
+
+## ---- fig.width = 4.2, fig.height = 3, fig.align = 'center'-------------------
+# Visualize the coancestry matrix using "popkin"!
+plot_popkin(
+    coancestry,
+    # zero inner margin (plus padding) because we have no labels
+    mar = 0,
+    leg_title = 'Coancestry'
+)
+
+## -----------------------------------------------------------------------------
+# number of loci in simulation (NOTE this is 30x less than in publication!)
+m_loci <- 10000
+# draw all random Allele Freqs (AFs) and genotypes
+# reuse the previous inbr_subpops, admix_proportions
+out <- draw_all_admix(
+    admix_proportions = admix_proportions,
+    tree_subpops = tree_subpops,
+    m_loci = m_loci
+)
+# genotypes
+X <- out$X
+
+## ---- fig.width = 6, fig.height = 2.8, fig.align = 'center'-------------------
+# estimate kinship using popkin
+# here we didn't use subpopulation labels for simplicity
+kinship_estimate <- popkin(X)
+# replace diagonal with inbreeding coeffs. to match coancestry matrix
+coancestry_estimate <- inbr_diag(kinship_estimate)
+
+# Visualize the coancestry matrix using "popkin"!
+plot_popkin(
+    list( coancestry, coancestry_estimate ),
+    titles = c('Truth', 'Estimate'),
+    # second value is top margin, for panel titles
+    mar = c(0, 2.5),
+    leg_title = 'Coancestry'
 )
 
